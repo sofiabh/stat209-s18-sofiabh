@@ -1,0 +1,43 @@
+---
+title: "test"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+```
+
+## Reading the Data
+
+The dataset categorizes favorite restaurants based on name,location, cuisine type,  favorite food, cost, date of last visit, and number of visits per year.
+```{r}
+mine <- read_csv("C:\\Users\\sb3mw\\Desktop\\fav_restaurants.csv")
+```
+This plot shows the relationship between the cost of meals and how many times per year the restaurant was visited.
+```{r}
+ ggplot(mine, aes(yearly_visits, cost_per_person)) +
+  geom_point()
+```
+
+This plot shows the relationship between the cost of meals and the city and state where the restaurant is located.
+```{r}
+ggplot(mine, aes(cost_per_person, location)) +
+  geom_point()
+```
+
+This plot shows the relationship between the cuisine type and cost per person of each meal.
+```{r}
+ggplot(mine, aes(cuisine, cost_per_person)) +
+  geom_point()
+```
+
+
+```
+
+
+## Plotting the Data
+
