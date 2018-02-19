@@ -1,0 +1,79 @@
+---
+title: "Sleep Patterns of UR Students"
+author: "Sofia Barnes-Horowitz"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(plotly)
+```
+
+# Sleep Patterns of UR Students
+
+## Overview
+
+This dataset is intended to compare the average hours of sleep that University of Richmond students get per night based on demographics, including gender, year in school (defined as the numeric value of age in years), whether or not you are a student athlete, involvement in Greek life, and the school that you are in.  These demographic variables are intended to determine if age, gender, and involvement in university activities affects the amount of sleep each student gets per night.  To collect this data, I created a survey asking the above questions and forwarded it to a random sample of students, including classmates and students in the same organizations as me.  Essentially, the goal of this data collection was to attempt to discern if there is significant variation among sleep patterns of students based on these factors, or if there are unrelated variables that account for variation in average amount of sleep in University of Richmond students.
+
+## Data dictionary
+
+Here is a data dictionary for the Sleep Patterns of UR Students dataset:
+
+- hours_of_sleep: a numeric variable (with limitations from 0 hours being the minimum and 10 being the maximum) giving the average number of hours that students sleep per night.
+- gender: a categorical variable (available responses being male, female, or other) giving the stated gender of each participant. 
+- age: a numeric variable giving the age of each participant-because the entire data pool is made up of college students, the range of responses could only be from 18 to 22.
+- athlete: a categorical variable with a yes or no response showing if each participant is a student athlete (i.e. plays a Division I sport for the University of Richmond).
+- greek: a character variable with a yes or no response showing if each student is involved in a Greek organization on campus, such as a social fraternity/sorority, academic fraternity, or academic fraternity.
+- school: a categorical variable with responses of: School of Arts and Sciences, Jepson School of Leadership Studies, or Robins School of Business to break participants up into cateogories based on primary majors/areas of study within the University of Richmond.
+
+Which can be read in as follows:
+
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+sleep <- read_csv("https://raw.githubusercontent.com/URstats/stat209-s18-sofiabh/master/sleep.csv")
+sleep
+```
+
+
+## Exploratory Analysis
+
+In the following four graphs, I will compare average hours of sleep per night with gender, Greek-life involvement, student athlete vs. non-student athlete, and school to determine if certain demographics/involvement in certain groups affects a student's average amount of sleep.
+
+```{r}
+ggplot(sleep, aes(factor(hours_of_sleep))) +
+  geom_bar(aes(fill=gender), position="dodge")
+```
+
+Relationship Between Gender and Hours of Sleep.  For males, the mode is 6 hours of sleep, and for females, the mode is 7 hours.
+
+```{r}
+ggplot(sleep, aes(hours_of_sleep)) +
+  geom_bar(aes(fill=greek), position="dodge")
+```
+
+Relationship Between Greek-Life involvement and Hours of Sleep. For participants involved in Greek Life, the mode is 7 hours of sleep, and for those not involved, the mode is 8 hours.
+
+```{r}
+ggplot(sleep, aes(hours_of_sleep)) +
+  geom_bar(aes(fill=athlete), position="dodge")
+```
+
+Relationship between hours of sleep per night for student athletes and non-student athletes.  For student athletes, the mode is 6 hours of sleep, and for non-athletes, the mode is 7 hours.
+
+```{r}
+ggplot(sleep, aes(hours_of_sleep)) +
+  geom_bar(aes(fill=school), position="dodge")
+```
+
+Relationship between hours of sleep per night and the school you study in at the University.  For all three schools, the mode is 7 hours of sleep.
+
+## Conclusion
+
+Through this analysis, I learned that of the sample of Richmond students that I collected, the overarching mode is 7 hours of sleep per night, and that there is little variation between demographics and hours of sleep based on this data. One interesting variation was that those not involved in Greek life had a mode of 8 hours of sleep, and student athletes on average get less sleep than non-athletes, suggesting that students who are less involved on campus get more sleep than those more involved.  However, because the pool was a random sample based off of students that I had access to, there was a disproportionate number of students that shared my demographics (i.e. female, age 20, involved in Greek life, school of Arts and Sciences, non-student athlete) which skewed the data and doesn't necessarily accurately represent the University of Richmond population and their sleep patterns.
