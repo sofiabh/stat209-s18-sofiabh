@@ -1,5 +1,5 @@
 ---
-title: "Relationships Between Race, Commute, and Income in Denver, CO"
+title: "Relationships Between Counties and Transplants in Denver, CO"
 author: "Sofia Barnes-Horowitz"
 output:
   html_document:
@@ -22,6 +22,7 @@ library(ggmap)
 library(viridis)
 library(forcats)
 library(ggmap)
+library(smodels)
 ```
 
 
@@ -32,69 +33,64 @@ denver <- filter(tracts, cbsa=="Denver-Aurora-Lakewood, CO")
 ```
 
 ##Background:
-The city of Denver, often referred to as the "Mile High City," and the suburbs surrounding it are known for their beautiful mountain views and a short but rich cultural history.  However, it is also known for not being particularly diverse, whether looking at factors of ethnicity, income or education level, number of languages spoken, religion, or household type.  In fact, Denver ranked 36th in the nation for diversity (Sevits, 2017).  And in terms of commuting, approximately 85% of commuters prefer to drive, while only 4% use public transportation, and the average commute time is 27.2 minutes, only slightly more than the national average (Hearsum 2017).
+The city of Denver, often referred to as the "Mile High City," and the suburbs surrounding it are known for their beautiful mountain views and a short but rich cultural history.  However, it is also known for not being particularly diverse, whether looking at factors of ethnicity, income or education level, number of languages spoken, religion, or household type.  In fact, Denver ranked 36th in the nation for diversity (Sevits, 2017).  But what is interesting about the Denver metropolitan area is the wide spread of transplants, meaning residents who were not born in Colorado, and the spread of income when looking at these factors across the various counties.  There are 10 counties total in the Denver metropolitan area, which span a wide radius with some over an hour outside the Denver city limits. And so it is interesting to to look at how income and birth place differ depending on exact location. 
 
 ##Introduction
-With these figures in mind, when looking at the relationship between census data and a large metropolitan area such as Denver, Colorado, it is interesting to compare factors such as commute methods, times, and income level with factors such as race; specifically the dichotomy between white and black residents.  Before constructing the data, the assumed relationship would be that wealthy, white residents live in the suburbs, resulting in a longer car commute, and lower-income minority residents (in this case measuring percentages of African Americans) would live closer to the city, resulting in a shorter commute and one not necessarily by car, but by public transportation, walking, biking, etc.  It is important to note, however, that the public transportation system in Denver, while very effective, is extremely new in comparison to those of bigger cities such as New York, Boston, or Chicago, which could potentially skew the results for percentage of residents taking cars in the graphics below (Hearsum, 2017).  Also, as stated above, the entire metropolitan area is not as racially diverse as many other cities, so it is logical that there would be much larger majorities of white people when looking at each variable and the relationships between them.
+Colorado is the 8th fastest growing state in the country, and as the largest and most well-known city in Colorado, Denver and its surrounding suburbs receive a majority of these transplants (Svaldi, 2017).  Therefore, before constructing the data, it could be assumed that the highest number of transplants would move into Denver County and the closest surrounding counties because the city contains most of the job growth.  However, it will be interesting to look at the distribution between Colorado natives and transplants on a map of the entire metropolitan area, because the entire area spans a wide range of counties including rural, urban, and suburban areas, and because the city is not the only desirable factor in moving to the Denver area with other attractions related to the nearby Rocky Mountains playing a role as well.
+
+```{r}
+ggplot(denver, aes(county, born_same_st)) +
+  geom_boxplot() +
+  coord_flip() +
+  xlab("County") +
+  ylab("Born in Colorado") +
+  ggtitle("Breakdown of Native Coloradans and Transplants by County")
+```
+As mentioned previously, Colorado is such a fast-growing state with a high number of residents who were born in other parts of the country, so it is interesting to break this down by each specific county.  While Denver county, which contains the city proper, has a relatively equal proportion of transplants and native Coloradans, Adams county has the largest proportion of native Coloradans, i.e. very few transplants, and Park County has very few native residents.  Douglas County also has a large proportion of transplants, though not quite as high as Park County.  These figures will make more sense after looking at the distribution of each county on a map, which is shown below.   
 
 
 ```{r}
-ggplot(denver, aes(commute_car, race_white)) +
-  geom_point(aes(color=race_black)) +
-  scale_color_viridis() +
-  ggtitle("Relationship Between Race and Commute By Car") +
-  xlab("Commute by Car") +
-  ylab("White Commuters")
-```
+county <- group_summarize(denver, county)
 
-The first relationship is between white commuters and the percentage of those that commute by car, with a color scale denoting numbers of black commuters that are present in the dataset.  As predicted, the vast majority of residents prefer to commute by car, and the vast majority of commuters are white, as evidenced by the clump of purple in the top right corner.  However, it is interesting to note that the method of transportation does not seem to be affected by race, as the black and mixed-raced residents follow the same trend as the white residents.  Now that we know that the majority of commuters get to work by car, it is interesting to look at how long the average commute takes.
+ggplot(denver, aes(lon, lat)) +
+  geom_point(aes(color=county), alpha=.4, show.legend = FALSE) +
+  geom_text(aes(lon_mean, lat_mean, label = county), data = county) +
+  theme_void() +
+  ggtitle("Map of Counties in the Denver Metropolitan Area")
+```
+Again, this map shows the location of each county in the entire Denver metropolitan area, with each county represented by a different color.  This visual is helpful in understanding the previous box plot, because it is possible that significant differences in numbers of native-born Coloradans and transplants is related to specific geographic location.  The outlier in this map is Park County, which had the highest number of residents born outside of Colorado.  Based on external data, this could be due to the fact that it is located within a ring of mountain ranges, which is a large tourist draw in general for the state and could be an attraction for new residents (Park County, 2018).  Another outlier in the previous graph was Adams County, with the largest number of Colorado-born residents.  Adams County is one of the closest suburbs to the city of Denver, but contains the second-most affordable Denver suburb (called Thornton) as well as the land surrounding Denver International Airport, which is located east of the city and contains a lot of open land that has only recently been developed (McKee, 2017).  These factors are both significant because they could account for a correlation between wealthier transplants coming in and settling in more desirable counties, such as the mountain location of Park County or downtown Denver, while residents that have been in the area for a long time and have a potentially more even distribution of wealth between them settle in the potentially less desirable and less expensive areas.  
 
 
 ```{r}
 denver$ctime_25_plus <- denver$ctime_25_29 + denver$ctime_30_34 + denver$ctime_35_39 + denver$ctime_40_44 
+
+
+denver$income_075_100_plus <- denver$income_075_100 + denver$income_100_125 + denver$income_125_150 + denver$income_150_200 + denver$income_200_999
+
+
+ggplot(denver, aes(county, income_075_100_plus)) +
+  geom_boxplot() +
+  coord_flip() +
+  theme_minimal() +
+  xlab("County") +
+  ylab("Residents Making $75,000 to $100,000 Per Year and Up") +
+  ggtitle("Breakdown of Average Income of Residents By County")
 ```
-
-```{r}
-ggplot(denver, aes(ctime_25_plus, race_white)) +
-  geom_point(aes(color=race_black)) +
-  scale_color_viridis() +
-  ggtitle("Relationship Between Race and Commute Time Over 25 Minutes") +
-  xlab("Commute Over 25 Minutes") +
-  ylab("White Commuters")
-  
-```
-
-For the purposes of this report, it makes sense to define a "short" commute as 20 minutes or less, in which case an average commute, i.e. one from the suburbs into the city, would be approximately between 25 and 45 minutes.  When looking at the graph below, commute times are clustered in the middle, indicating that only about 50 percent of commuters take 25 minutes or more to get to work each day.  Also, just as in the first graph, there is little to no relationship between race and commute time, as the black and mixed-race populations followed the same patterns as the white population.  The final graph, however, shows the relationship between race (again, between white and black residents) and income, in this case those making $75,000 per year or more.  
-
-
-```{r}
-denver$income_075_100_plus <- denver$income_075_100 + denver$income_100_125 + denver$income_125_150 
-```
-
-```{r}
-ggplot(denver, aes(income_075_100_plus, race_white)) +
-  geom_point(aes(color=race_black)) +
-  scale_color_viridis() +
-  ggtitle("Relationship Between Race and Income") +
-  xlab("Residents Making $75,000 Per Year or More") +
-  ylab("White")
-  
-
-```
-
-The use of looking at incomes of $75,000 or more per year is significant because in the state of Colorado, it takes a minimum of $131,000 per year to be considered upper income, while the median household income is about $44,000 per year (Loudenback and Gould, 2017).  Therefore, an average annual income of $75,000 per year or more indicates an upper middle class status on the lower end of the scale, and significant wealth on the higher end.  In the graph, a little more than 50 percent of the given population is making $75,000 per year or more- while the trend towards the right of the scale is small, it is significant in showing the amount of wealth in the Denver metropolitan area.  In terms of the relationship between income and race, black and mixed-race residents again followed the same trends as their white counterparts.
+This plot is interesting because the most affluent county, Douglas County, had the second highest number of transplants and is located relatively far from the city center.  This affluence could be attributed again to location: the whole of the county is located approximately halfway between the two largest cities, Denver and Colorado Springs, and within the county there is a great number of state parks, trails, and a reservoir that hosts many recreational activities, which are significant because it could again explain why so many transplants are choosing to live in these particular suburbs and how they can afford to (McKee, 2017).  Denver County itself is also interesting because there is such a wide spread of income on the plot, meaning there is a large difference in income within the city with some making upwards of $100,000 a year and some making well below that.  Adams County, however, is the least affluent county in the entire area, and again has the highest number of Colorado-born residents.  Because it is not particularly affluent and has such a small number of transplants, it is likely that this particular county is not the most popular location choice for those wishing to move in to the Denver area.  Finally, Park County, while having the highest number of transplants, is not particularly affluent either, suggesting that it could attract transplants who want to move into the Denver area and like the location but cannot afford to move into the more affluent suburbs or the city itself.
 
 ##Conclusion:
-Despite the previous assumption that the data would reveal that white, wealthy residents prefer to commute by car and have a longer commute time, the data instead showed that only one of those assumptions holds true: a vast majority of Denver residents do in fact commute by car.  However, commute times were relatively evenly divided, even after splitting them up into categories of short, average, and long (the graph depicted the "average" of 25 minutes of more), between varieties of times, with no clear trend.  In terms of income, Denver clearly has less of a dichotomy between the lower-income, middle class, and wealthy residents, with a small trend towards the higher-income side of the scale.  This is proven by external data, as the poverty rate in metropolitan Denver has been rising, but at a much slower rate than the rest of the country, which indicates that there is a generally more even distribution of wealth within the city and surrounding suburbs than in other major U.S. cities (Aguilar, 2017).  As briefly mentioned in the introduction, there are a variety of external factors that could have influenced these results: for example, there could be more of a dichotomous relationship between whites and Hispanics as opposed to whites and blacks within each subsequent variable, and again with the variable of race, Denver is an incredibly white city and not very ethnically diverse, so race ultimately reveals little in relation to commute times, income level, and mode of transportation.  Also, the relatively equal dispersion of wealth and commute times could be attributed to a lack of specificity: for example, the data could have been further broken down into commute time and wealth by neighborhood, which would indicate if there was a more direct relationship between the two variables and if race played a role in their relationship, because the entire metropolitan area is extremely large and spans across wealthy and lower-income neighborhoods.  However, it is still interesting to observe the distribution of Denver's white population in transportation preference, average commute time, and average income, as the results would like very different in another American city.
+When looking at the two box plots and map above, there are correlations between location, affluence, and whether you were born in the state of Colorado or moved there when looking at the distribution of counties in the Denver metropolitan area.  Again, Colorado is the eighth-fastest growing state, so it is interesting to then look at where transplants decided to settle and if income relates to those figures (Svaldi, 2017).  In the first graphic, it is clear that Park County has the majority of transplants within the area, Adams County has the highest proportion of native Coloradans, and Denver County has a wide range of both transplants and natives, which makes sense as it contains downtown Denver.  Douglas County also has very high numbers of transplants, which is interesting because both Douglas and Park Counties are quite a distance from downtown Denver.  Douglas County was also the most affluent county, with the highest income per year of the 10 counties, while Adams County had one of the lowest incomes per year, making it the least affluent county of the 10.  These findings are significant because there is a small connection between affluence and being born out-of-state, with the wealthiest county having the second-highest proportion of transplants and the county with the lowest levels of income having the highest number of Colorado-born residents.  When analyzying this data while looking at the exact location of each county, there is also a possible correlation between location and proportion of transplants in that the counties with the highest proportion of transplants lived the furthest away from downtown Denver.  This could be a deliberate move in wanting to be closer to the environmental attractions that the state is known for, or simply a choice to not live in the less affluent suburbs: Adams, Arapahoe, and Denver County itself are not quite as affluent based on income levels but are extremely close (if not in) the downtown Denver area.  Ultimately, while there are other factors and outliers, it is logical that in such a fast-growing metropolitan area, wealthier people would choose to move to the more affluent suburbs and counties, explaining their presence in downtown Denver and the extremely wealthy Douglas County, and less affluent transplants would move to more affordable, i.e. less affluent counties, such as Park County, while residents that are Colorado-born and not as affluent stay in the suburbs closest to downtown Denver, particularly Adams County, but also Arapahoe and other neighborhoods in Denver County.
 
 ## References
-Aguilar, John. "Suburban poverty rising more slowly in Denver..." Denver Post, 14 July 2017, https://www.denverpost.com/2017/07/14/poverty-suburban-denver-apartment-list-report/.
+"Denver-Aurora-Lakewood, CO Metro Area." Data USA, 2017, https://datausa.io/profile/geo/denver-aurora-broomfield-co-metro-area/#intro
+
+"Geography and Geology." Park County, 2018, https://www.parkco.us/275/Geography-Geology.
 
 Hearsum, Katie. "What's it like to live in Denver, CO?" U.S. News & World Report, 2017, https://realestate.usnews.com/places/colorado/denver.
 
-Loudenback, Tanza, and Skye Gould. “How Much You Have to Earn to Be Considered Rich in Every State.” Business Insider, 16 Sept. 2017, www.businessinsider.com/upper-income-us-state-2017-9.
+McKee, Spencer. "These Are The 10 Most Affordable Denver Suburbs." Movoto, 2017. https://www.movoto.com/guide/denver-co/affordable-denver-suburbs/.
 
 Sevits, Kurt. "How diverse are Colorado's cities compared to others? Not very." Denver7, 4 May 2017, https://www.thedenverchannel.com/news/local-news/how-diverse-are-colorados-cities-compared-to-others-not-very.
 
-
+Svaldi, Aldo. "Colorado grows faster than all but seven states." The Denver Post, 20 December, 2017. https://www.denverpost.com/2017/12/20/colorado-population-2017/
 
