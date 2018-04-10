@@ -1,0 +1,78 @@
+---
+title: "Patterns In Social Media Use and College Students"
+author: "Sofia Barnes-Horowitz"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(out.width = "100%")
+knitr::opts_chunk$set(dpi = 300)
+
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(ggmap)
+library(viridis)
+library(forcats)
+library(smodels)
+```
+
+```{r}
+instagram <- read_csv("~/Desktop/instagram.csv")
+```
+
+## Introduction
+In this report, I am interested in discovering if there are any significant relationships between the types of photos posted on Instagram and numbers of likes and comments.  Therefore, my three possible hypotheses are: If a photo is of a couple, it will receive more likes than if it were of friends, family, or another category without people.  If a photo is of a couple, it will receive more comments than a post with friends family, or another category.  And finally, as the number of likes on a photo increases, the number of comments will increase as well.
+
+## Methods
+For this project, I am using the lm_basic function to fit regression models to find relationships between the average number of instagram comments, likes, and different types of photos.  To collect this dataset, I randomly selected photos from my instagram feed and categorized the type of photo as friends, family, couple, or other (which encompasses any photo not containing people such as a landscape) and recorded the number of likes and comments.  To make the process more consistent, I only used photos that were posted by university students and that had an average range of 150-380 likes per photo so that other factors such as large differences in numbers of followers didn't affect the results.
+
+## Results
+This first regression table shows how the average number of comments on a photo changes according to type of photo.  Photos of couples had the highest, on average, number of stastically significant comments.
+
+```{r}
+model <- lm_basic (comments ~ 1 + type, data = instagram)
+reg_table(model, level = 0.95)
+```
+
+To further demonstrate the relationship between number of comments and type of photo, below is a boxplot which reveals that photos of couples received the highest number of comments on average compared to the other types.
+
+```{r}
+ggplot(instagram, aes(type, comments)) +
+  geom_boxplot()
+```
+
+The second regression table shows the average number of likes depending on type, with photos of families receiving the most likes.  However, the values for the family category are not statistically significant.  
+
+```{r}
+model <- lm_basic (likes ~ 1 + type, data = instagram)
+reg_table(model, level = 0.95)
+```
+
+This boxplot below again shows which type of photo received the most likes on average based on type, with "family" receiving both the widest range of likes including the highest on average, and the "couple" category not far behind.
+
+```{r}
+ggplot(instagram, aes(type, likes)) +
+  geom_boxplot()
+```
+
+This model shows the average relationship between likes and comments, and as likes increase, comments increase, so it is a statistically significant positive relationship.
+
+```{r}
+model <- lm_basic (likes ~ 1 + comments, data = instagram)
+reg_table(model, level = 0.95)
+```
+
+This scatterplot below is a visual of the relationship between comments and likes, showing the very small but still positive relationship between the two variables.
+
+```{r}
+ggplot(instagram, aes(likes, comments)) +
+  geom_point() +
+  geom_smooth(method="lm")
+```
+
+## Conclusions
+My first hypothesis was that photos of couples would receive the most comments, which was proven to be true by the first model and boxplot shown above.  Also, photos in the "other" category, which generally meant that they didn't contain people, had the least amount of comments on average.  All of the categories within the "type" variable were statistically significant except for the "family" category, as its confidence interval contained both a negative and positive value.  My second hypothesis was that photos of couples would receive the most likes as well, which was not proven true by the regression table.  Photos of families received the most likes on average; however, as stated previously, these values were not statistically significant so it is not necessarily proven by the data.  Also, photos of families had the largest range of likes with some on the lower end of the range of likes.  Finally, my last hypothesis was that as the number of likes on a photo increases, the number of comments increases as well, indicating a positive relationship between the two numeric variables.  This was supported by the data, and the values are statistically significant, however, when looking at the scatterplot as a visual representation of this data, there is still some variation between the two variables with outliers on both ends.  Ultimately, there are a lot of possible factors that could have contributed to the results of this data; such as differences in numbers of followers, the time of day that the photo was posted, or the photo quality.
