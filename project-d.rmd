@@ -1,0 +1,91 @@
+---
+title: "What Factors Contribute to Higher Rates of Melanoma in Certain States?"
+author: "Sofia Barnes-Horowitz"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(out.width = "100%")
+knitr::opts_chunk$set(dpi = 300)
+
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(ggmap)
+library(viridis)
+library(forcats)
+library(smodels)
+```
+
+
+```{r}
+cancer <- read_csv("https://statsmaths.github.io/stat_data/cancer_inc_data.csv")
+```
+
+##Introduction
+Melanoma is the deadliest form of skin cancer, often caused by UV rays as a result of unprotected sun exposure (Skin Cancer Foundation 2018).  Because its presence is greatly impacted by enviornmental factors, as opposed to genetic factors, it is interesting to see if there is a correlation between state/where one lives and rates of melanoma.  Without consulting the data, one might first predict that states that are further south will have higher rates of melanoma due to increased sun exposure than states further north. However, it is also interesting because those who produce lower levels of melanin, meaning those with lighter skin, are more susceptible to melanoma because they have less protection from UV rays that melanin provides (Skin Cancer Foundation 2018).  With this knowledge, it is more likely that the states with larger percentages of white people will have higher rates of melanoma occurrences, and the states with more racial diversity will have lower rates of melanoma.  Based on geography alone, it is possible that the states that are further south will also have higher rates of melanoma than the states that are further north, becasue there is less exposure to sunlight; however, distribution of race is likely to be more telling. 
+
+##Results
+To begin looking into this data, below is a boxplot showing incidences of melanoma by state and organized by region.  In their respective regions, Wisconsin, Illinois, Utah, Vermont, and Iowa have the highest rates of melanoma.  This alone does not show much of a relationship between region and melanoma rates.
+```{r}
+cancer_state<-group_summarize(cancer, state)
+```
+
+
+```{r}
+ggplot(cancer, aes(state, melanoma)) +
+  geom_boxplot() +
+  facet_wrap(~region, scales = "free_x") +
+  scale_y_continuous(limit = c(10, 40)) +
+  xlab("States, Organized By Region") +
+  ylab("Incidences of Melanoma") +
+  ggtitle("Breakdown of Incidences of Melanoma By State and Region")
+```
+
+The graphic below shows the relationship between incidence rates of melanoma and mean latitude by state, and reveals an interesting pattern: While there are a few outliers, the general trend is that as latitude increases, meaning the further north you go, the higher the rate of melanoma.  In particular, Utah is relatively far north and has the highest rate of melanoma, and Washington D.C. is in the mid-atlantic region, neither particularly north nor south, and has extremely low levels of melanoma.
+
+```{r}
+ggplot(cancer_state, aes(lat_mean, melanoma_mean)) +
+  geom_text(aes(label=state)) +
+  geom_smooth() +
+  xlab("Mean Latitude") +
+  ylab("Incidences of Melanoma") +
+  ggtitle("Relationship Between Latitude and Prevalence of Melanoma By State")
+```
+
+To explain these outliers and the general trend, this third graphic shows the relationship between race and incidence rates of melanoma by comparing mean percentages of white people.  The general trend is a positive one, meaning that as "whiteness" increases, the prevalence of melanoma increases.
+
+```{r}
+ggplot(cancer_state, aes(melanoma_mean, white_alone_mean)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  xlab("Percentage of Melanoma") +
+  ylab("Mean Percentage of White People") +
+  ggtitle("Relationship Between Race and Prevalence of Melanoma")
+```
+
+To further outline this relationship between race and melanoma rates, the two regression tables below give the estimated mean of melanoma rates across states dependent on race.  The slope coefficient in the first regression table is positive and larger than the intercept, indicating that white people have higher rates of melanoma than the average person in the dataset, and in the second table, because the slope coefficient is negative, it indicates that black people have much lower rates of melanoma than the average person in the dataset.
+
+```{r}
+model <- lm_basic(melanoma_mean ~ 1 + white_alone_mean, data = cancer_state)
+reg_table(model, level = 0.95)
+```
+```{r}
+model<-lm_basic(melanoma_mean~1 + black_alone_mean, data=cancer_state)
+reg_table(model, level=0.95)
+```
+
+##Conclusion
+To first look at the data by state, one might assume that there is a correlation between latitude and rates of melanoma, i.e. that states that are further south have higher rates of melanoma because the people that live there have more exposure to sun.  However, by simply looking at latitude and melanoma, there were outliers that didn't fit in with this assumption, and in fact, there was a negative relationship between the two variables.  Because the most prominent outliers on either end of the scale were Utah, a state with very low levels of diversity and high numbers of white people, and Washington D.C., which is one of the most diverse districts/states in the country, we can conclude that race plays a larger role in rates of melanoma as opposed to simply latitude or sun exposure (Bernardo 2017).  The third graphic outlines this further by showing how rates of melanoma increase as people get "whiter."  This fits into my external research and the knowledge that the darker one's skin color, the more melanin you produce, which is a natural protector against harmful UV rays that can cause skin cancers like melanoma.  Therefore the whiter you are, the less melanin you have, and the more susceptible you are to melanoma, which explains why there are higher incidences of melanoma in states with higher numbers of white people.  In the first boxplot which separated rates of melanoma by state and region and the second graphic depicting incidences of melanoma by latitude, some of the most obvious examples of states with high rates of melanoma were Utah and Vermont.  These are some of the states with not only the lowest levels of diversity, but the lowest numbers of black people (Bernardo 2017).  Therefore despite significant sun exposure in more southern states such as Louisiana and Texas, there is quite a bit of racial and ethnic diversity in those states so there are on the lower end of the spectrum in terms of rates of melanoma occurrences (Black Demographics 2016).
+
+##References
+“Melanoma.” 2018. Skin Cancer Foundation, www.skincancer.org/skin-cancer-information/melanoma.
+
+"Dark Skin Tones and Skin Cancer: What You Need to Know." 2018. Skin Cancer Foundation, www.skincancer.org/prevention/skin-cancer-and-skin-of-color.
+
+Bernardo, Richie. 2017. "2017's Most and Least Diverse States in America." WalletHub, www.wallethub.com/edu/most-least-diverse-states-in-america/38262/.
+
+"African American Population By State." 2016. Black Demographics, www.blackdemographics.com/population/black-state-population/.
